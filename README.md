@@ -16,3 +16,5 @@ There are mainly two design challenges:
 1. When an event needs to be executed every let's say 3 seconds. In that case, each time the pointer reaches that event, it needs to re-schedule it in three seconds later from its current time slot.
 
 2. When an event needs to be executed every let's say 30 seconds. In this case, the timer should pass three full rotation. In this situation, the value R will be considered.
+
+Events are nothing but function pointers. 
