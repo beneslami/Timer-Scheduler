@@ -6,6 +6,6 @@ typedef struct _ll_ ll_t;         /* opeque structure */
 
 ll_t*
 init_singly_ll();
-void
+int 
 add_node_by_val(ll_t*, void*);
 #endif
