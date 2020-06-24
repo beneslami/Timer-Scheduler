@@ -1,6 +1,9 @@
 #ifndef WHEELTIMER_H
 #define WHEELTIMER_H
 
+/*Gives the absolute slot no since the time WT has started*/
+#define GET_WT_CURRENT_ABS_SLOT_NO(wt)	((wt->current_cycle_no * wt->wheel_size) + wt->current_clock_tic)
+
 typedef struct _wheel_timer_ wheel_timer_t;           /* opage structure */
 typedef struct _wheel_timer_elem_ wheel_timer_elem_t; /* opage structure */
 typedef void (*app_call_back)(void *arg, int sizeof_arg);
