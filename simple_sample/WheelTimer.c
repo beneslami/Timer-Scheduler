@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <pthread.h>
 #include "WheelTimer.h"
 #include "LinkedListApi.h"
@@ -25,7 +26,29 @@ struct _wheel_timer_{
 
 static void*
 wheel_fn(void *arg){
-  printf("for now\n");
+  wheel_timer_t *wt = (wheel_timer_t*)arg;
+  wheel_timer_elem_t *wt_elem = NULL;
+  int absolute_slot_num = 0;
+  ll_t *slot_list = NULL;
+  ll_node *head = NULL, *prev_node = NULL;
+  while(1){
+    wt->current_clock_tic++;
+    if(wt->current_clock_tic == wt->wheel_size){
+      wt->current_clock_tic = 0;
+      wt->current_cycle_no++;
+    }
+    sleep(wt->clock_tic_interval);
+    slot_list = wt->slots[wt->current_clock_tic];
+    absolute_slot_num = GET_WT_CURRENT_ABS_SLOT_NO(wt);
+    printf("Wheel Timer Time = %d : ", absolute_slot_num * wt->clock_tic_interval);
+    if(is_ll_empty(slot_list))
+      printf("\n");
+  }
+
+  /* Pseudo code
+  write a safe loop in a way that even if you delete the current node, the loop still runs fine.
+  */
+
   return NULL;
 }
 

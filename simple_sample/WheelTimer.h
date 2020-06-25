@@ -26,5 +26,7 @@ void
 cancel_wheel_timer(wheel_timer_t*);
 void
 reset_wheel_timer(wheel_timer_t*);
+void
+free_wheel_timer_element(wheel_timer_elem_t*);
 
 #endif
