@@ -4,12 +4,12 @@
 #include "LinkedListApi.h"
 
 void
-print(char *str){
+print_(char *str){
     printf("%s\n", str);
 }
 void wrapper_print(void *arg, int arg_size){
   char *str = (char*)arg;
-  print(str);
+  print_(str);
 }
 
 int
