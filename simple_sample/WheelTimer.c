@@ -41,15 +41,14 @@ wheel_fn(void *arg){
     slot_list = wt->slots[wt->current_clock_tic];
     absolute_slot_num = GET_WT_CURRENT_ABS_SLOT_NO(wt);
     printf("Wheel Timer Time = %d : ", absolute_slot_num * wt->clock_tic_interval);
-    //if(is_ll_empty(slot_list))
+    if(is_ll_empty(slot_list))
       printf("\n");
-  }
-
   ITERATE_LIST_BEGIN_ENHANCED(slot_list, head, prev_node){
     wt_elem = (wheel_timer_elem_t*)head->data;
     if(wt->current_cycle_no == wt_elem->execute_cycle_no){
-      wt_elem->app_callback(wt_elem->arg, wt_elem->arg_size);
-      if(wt_elem->is_recurrence){
+      wt_elem->app_callback(wt_elem->arg, wt_elem->arg_size);     //Invoke the application event through fn pointer
+      if(wt_elem->is_recurrence){   // After invocation, check if the event needs to be rescheduled again in future
+        //relocate or reschedule to the next slot
         int next_abs_slot_num  = absolute_slot_num + (wt_elem->time_interval/wt->clock_tic_interval);
   			int next_cycle_no     = next_abs_slot_num / wt->wheel_size;
   			int next_slot_no      = next_abs_slot_num % wt->wheel_size;
@@ -66,6 +65,7 @@ wheel_fn(void *arg){
       }
     }
   }ITERATE_LIST_END_ENHANCED(slot_list, head, prev_node);
+}
   return NULL;
 }
 
