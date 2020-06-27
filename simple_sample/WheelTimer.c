@@ -41,14 +41,31 @@ wheel_fn(void *arg){
     slot_list = wt->slots[wt->current_clock_tic];
     absolute_slot_num = GET_WT_CURRENT_ABS_SLOT_NO(wt);
     printf("Wheel Timer Time = %d : ", absolute_slot_num * wt->clock_tic_interval);
-    if(is_ll_empty(slot_list))
+    //if(is_ll_empty(slot_list))
       printf("\n");
   }
 
-  /* Pseudo code
-  write a safe loop in a way that even if you delete the current node, the loop still runs fine.
-  */
-
+  ITERATE_LIST_BEGIN_ENHANCED(slot_list, head, prev_node){
+    wt_elem = (wheel_timer_elem_t*)head->data;
+    if(wt->current_cycle_no == wt_elem->execute_cycle_no){
+      wt_elem->app_callback(wt_elem->arg, wt_elem->arg_size);
+      if(wt_elem->is_recurrence){
+        int next_abs_slot_num  = absolute_slot_num + (wt_elem->time_interval/wt->clock_tic_interval);
+  			int next_cycle_no     = next_abs_slot_num / wt->wheel_size;
+  			int next_slot_no      = next_abs_slot_num % wt->wheel_size;
+  			wt_elem->execute_cycle_no 	 = next_cycle_no;
+        if(next_slot_no == wt->current_clock_tic){
+          ITERATE_LIST_CONTINUE_ENHANCED(slot_list, head, prev_node);
+        }
+        ll_remove_node(slot_list, head);
+        ll_add_node(wt->slots[next_slot_no], head);
+      }
+      else{
+        free_wheel_timer_element((wheel_timer_elem_t*)head->data);
+        ll_delete_node(slot_list, head);
+      }
+    }
+  }ITERATE_LIST_END_ENHANCED(slot_list, head, prev_node);
   return NULL;
 }
 
@@ -94,6 +111,11 @@ register_app_event(wheel_timer_t *wt, app_call_back call_back, void *arg, int ar
       printf("error in adding event to the linked list\n");
       return NULL;
     }
-
     return wt_elem;
+}
+
+void
+free_wheel_timer_element(wheel_timer_elem_t *wt_elem){
+	free(wt_elem->arg);
+	free(wt_elem);
 }
