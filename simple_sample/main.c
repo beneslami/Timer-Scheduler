@@ -19,6 +19,7 @@ main(int argc, char **argv){
 
   /* Register the events to be triggered with Wheel timer now. */
   wheel_timer_elem_t *wt_elem = register_app_event(wt, wrapper_print, "ben_event", strlen("ben_event"), 3, 1);
+  wt_elem = register_app_event(wt, wrapper_print, "Oana_event", strlen("Oana_event"), 5, 1);  // special case when ben_event and Oana_event is triggered at 15th slot!
 
   scanf("\n");
   return 0;
