@@ -3,18 +3,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-struct _ll_node { /* ll_node */
-  void* data;
-  struct _ll_node *next;
-};
-
-struct _ll_{    /* ll_t */
-  ll_node *head;
-  unsigned int node_count;
-  int (*comparison_fn)(void*, void*);
-  int (*order_comparison_fn)(void*, void*);
-};
-
 ll_t*
 init_singly_ll(){
   ll_t *head = calloc(1, sizeof(ll_t));
