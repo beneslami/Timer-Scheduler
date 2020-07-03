@@ -44,7 +44,7 @@ wheel_fn(void *arg){
     if(is_ll_empty(slot_list))
       printf("\n");
   ITERATE_LIST_BEGIN_ENHANCED(slot_list, head, prev_node){
-    wt_elem = (wheel_timer_elem_t*)head->data;
+    wt_elem = (wheel_timer_elem_t*)get_node_data(head);
     if(wt->current_cycle_no == wt_elem->execute_cycle_no){
       wt_elem->app_callback(wt_elem->arg, wt_elem->arg_size);     //Invoke the application event through fn pointer
       if(wt_elem->is_recurrence){   // After invocation, check if the event needs to be rescheduled again in future
@@ -60,7 +60,7 @@ wheel_fn(void *arg){
         ll_add_node(wt->slots[next_slot_no], head);
       }
       else{
-        free_wheel_timer_element((wheel_timer_elem_t*)head->data);
+        free_wheel_timer_element((wheel_timer_elem_t*)get_node_data(head));
         ll_delete_node(slot_list, head);
       }
     }
