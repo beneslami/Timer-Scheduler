@@ -63,32 +63,31 @@ wheel_fn(void *arg){
     }
     sleep(1);
     slot_list = wt->second->slots[wt->second->current_clock_tic];
-    //absolute_slot_num = GET_WT_CURRENT_ABS_SLOT_NO(wt);
     printf("Wheel Timer Time = %d hour(s), %d minute(s), %d second(s): ", wt->hour->current_clock_tic, wt->minute->current_clock_tic, wt->second->current_clock_tic);
     if(is_ll_empty(slot_list))
       printf("\n");
     ITERATE_LIST_BEGIN_ENHANCED(slot_list, head, prev_node){
       wt_elem = (wheel_timer_elem_t*)get_node_data(head);
-      if(wt->hour->current_cycle_no == wt_elem->execute_cycle_no_hour){
-        if(wt->minute->current_cycle_no == wt_elem->execute_cycle_no_minute){
-          if(wt->second->current_cycle_no == wt_elem->execute_cycle_no_second){
+      if(wt->hour->current_clock_tic == wt_elem->execute_cycle_no_hour){
+        if(wt->minute->current_clock_tic == wt_elem->execute_cycle_no_minute){
+          if(wt->second->current_clock_tic == wt_elem->execute_cycle_no_second){
             wt_elem->app_callback(wt_elem->arg, wt_elem->arg_size);     //Invoke the application event through fn pointer
             if(wt_elem->is_recurrence){ // After invocation, check if the event needs to be rescheduled again in future
-              int next_hour = wt_elem->time_interval;
               time_value_t *current_time = calloc(1, sizeof(time_value_t*));
               GET_WT_CURRENT_TIME(wt, current_time);
-            	int hour_cycle_no = (wt_elem->time_interval/3600 + current_time->hour)%12;
-              int min_cycle_no = (((wt_elem->time_interval - (hour_cycle_no*3600))/60) + current_time->minute)%60;
-              int sec_cycle_no = ((int)((float)(((wt_elem->time_interval - (hour_cycle_no*3600))/60) - min_cycle_no)*60) + current_time->second)%60;
+              int hour_cycle_no = (int)((wt_elem->time_interval/3600) + current_time->hour)%12;
+              int min_cycle_no  = (int)(((wt_elem->time_interval - (hour_cycle_no*3600))/60) + current_time->minute)%60;
+              int sec_cycle_no  = ( wt_elem->time_interval - (hour_cycle_no*3600) - (min_cycle_no*60) + current_time->second) % 60;
+              free(current_time);
             	int slot_no  = sec_cycle_no;
               wt_elem->execute_cycle_no_hour = hour_cycle_no;
-              wt_elem->execute_cycle_no_hour = min_cycle_no;
-              wt_elem->execute_cycle_no_hour = sec_cycle_no;
+              wt_elem->execute_cycle_no_minute = min_cycle_no;
+              wt_elem->execute_cycle_no_second = sec_cycle_no;
               if(sec_cycle_no == wt->second->current_clock_tic){
                 ITERATE_LIST_CONTINUE_ENHANCED(slot_list, head, prev_node);
               }
               ll_remove_node(slot_list, head);
-              ll_add_node(wt->second->slots[sec_cycle_no], head);
+              ll_add_node(wt->second->slots[slot_no], head);
             }
             else{
               free_wheel_timer_element((wheel_timer_elem_t*)get_node_data(head));
@@ -110,19 +109,19 @@ init_wheel_timer(){
   wt_second->current_clock_tic = 0;
   wt_second->current_cycle_no = 0;
   wt_second->wheel_size = 60;
-  int i = 0;
-  for(; i< 60; i++)
+
+  for(int i = 0; i< 60; i++)
     wt_second->slots[i] = init_singly_ll();
   timer->second = wt_second;
 
-  wheel_timer_t *wt_minutes = calloc(1, sizeof(wheel_timer_t) + 60*sizeof(ll_t*));
+  wheel_timer_t *wt_minutes = calloc(1, sizeof(wheel_timer_t));
   wt_minutes->clock_tic_interval = 60;
   wt_minutes->wheel_size = 60;
   wt_minutes->current_clock_tic = 0;
   wt_minutes->current_cycle_no = 0;
   timer->minute = wt_minutes;
 
-  wheel_timer_t *wt_hour = calloc(1, sizeof(wheel_timer_t) + 12*sizeof(ll_t*));
+  wheel_timer_t *wt_hour = calloc(1, sizeof(wheel_timer_t));
   wt_hour->clock_tic_interval = 3600;
   wt_hour->wheel_size = 12;
   wt_hour->current_clock_tic = 0;
@@ -140,7 +139,6 @@ start_wheel_timer(timer_t *wt){
     printf("Wheel timer thread initialization failed, exiting ...\n");
     exit(0);
   }
-  printf("1\n");
 }
 
 wheel_timer_elem_t*
@@ -154,20 +152,18 @@ register_app_event(timer_t *wt, app_call_back call_back, void *arg, int arg_size
     wt_elem->arg_size = arg_size;
     wt_elem->is_recurrence = is_recursive;
 
-    time_value_t *current_time = calloc(1, sizeof(time_value_t*));
-    GET_WT_CURRENT_TIME(wt, current_time);
-  	int hour_cycle_no = (wt_elem->time_interval/3600 + current_time->hour)%12;
-    int min_cycle_no = (((wt_elem->time_interval - (hour_cycle_no*3600))/60) + current_time->minute)%60;
-    int sec_cycle_no = ((int)((float)(((wt_elem->time_interval - (hour_cycle_no*3600))/60) - min_cycle_no)*60) + current_time->second)%60;
+  	int hour_cycle_no = (int)((wt_elem->time_interval/3600)) % 12;
+    int min_cycle_no  = (int)(((wt_elem->time_interval - (hour_cycle_no*3600))/60)) % 60;
+    int sec_cycle_no  = ( wt_elem->time_interval - (hour_cycle_no*3600) - (min_cycle_no*60) ) % 60;
+
   	int slot_no  = sec_cycle_no;
   	wt_elem->execute_cycle_no_hour = hour_cycle_no;
-    wt_elem->execute_cycle_no_hour = min_cycle_no;
-    wt_elem->execute_cycle_no_hour = sec_cycle_no;
+    wt_elem->execute_cycle_no_minute = min_cycle_no;
+    wt_elem->execute_cycle_no_second = sec_cycle_no;
     if(add_node_by_val(wt->second->slots[slot_no], wt_elem) != 0){
       printf("error in adding event to the linked list\n");
       return NULL;
     }
-    free(current_time);
     return wt_elem;
 }
 
