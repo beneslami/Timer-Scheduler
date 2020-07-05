@@ -14,7 +14,7 @@ void wrapper_print(void *arg, int arg_size){
 
 int
 main(int argc, char **argv){
-  wheel_timer_t *wt = init_wheel_timer(5, 1); //10 -> the number of slots , 1->time it takes between each slot
+  wheel_timer_t *wt = init_wheel_timer(5, 1);
   start_wheel_timer(wt); /* Wheel timer has started running in a separte thread. */
 
   /* Register the events to be triggered with Wheel timer now. */
